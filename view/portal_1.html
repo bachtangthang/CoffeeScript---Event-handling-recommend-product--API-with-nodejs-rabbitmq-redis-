@@ -1,0 +1,82 @@
+<div class="container">
+  <div class="nk-recent-title">{{=it.title}}</div>
+  <div class="product-list owl-carousel owl-loaded owl-drag">
+    <div class="owl-stage-outer">
+      <div
+        class="owl-stage"
+        style="transition: all 0.25s ease 0s; width: 5310px"
+      >
+        {{~it.products :product:index}}
+        <div
+          class="owl-item cloned"
+          style="width: 285px; margin-right: 10px; visibility: visible"
+        >
+          <div class="product-slide">
+            <div class="product">
+              <div class="product-header">
+                <div class="product-image">
+                  <a href="{{=product.landing_page_url}}"
+                    ><img
+                      src="{{=product.image_url}}"
+                      alt="{{=product.product_name}}"
+                  /></a>
+                </div>
+                <div class="top-left">
+                  <img
+                    src="https://cdn.nguyenkimmall.com/images/companies/_1/Data_Price/Pic_Tags/2022/Badge/top-left-Cong-Lap-Dat.png"
+                    alt="top-left-tag"
+                  />
+                </div>
+                <div class="top-right">
+                  <div class="discount-percent"><span>0%</span></div>
+                </div>
+                <div class="bottom-left"></div>
+                <div class="bottom-right"></div>
+              </div>
+              <div class="product-body">
+                <div class="product-feature-badge">
+                  <div class="product-feature-badge-item installment">
+                    <span>Trả góp 0%</span>
+                  </div>
+                </div>
+                <div class="product-title">
+                  <a href="{{=product.landing_page_url}}"
+                    >{{=product.product_name}}</a
+                  >
+                </div>
+                <div class="product-price">
+                  <p class="final-price">{{=product.price}}</p>
+                  <p class="origin-price">{{=product.price}}</p>
+                  <div class="saved">
+                    View <span class="amount">{{=product.view}}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="product-footer"></div>
+            </div>
+          </div>
+        </div>
+        {{~}}
+      </div>
+    </div>
+    <div class="owl-nav">
+      <button type="button" role="presentation" class="owl-prev">
+        <i class="fa fa-angle-left" aria-hidden="true"></i></button
+      ><button type="button" role="presentation" class="owl-next">
+        <i class="fa fa-angle-right" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="owl-dots disabled"></div>
+
+    <style>
+      .categories-list .owl-nav button.owl-prev {
+        left: -35px !important;
+        top: 20px;
+      }
+      .categories-list .owl-nav button.owl-next {
+        right: -35px !important;
+        top: 20px;
+      }
+    </style>
+  </div>
+</div>

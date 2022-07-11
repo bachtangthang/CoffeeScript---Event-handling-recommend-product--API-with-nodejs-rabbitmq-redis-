@@ -1,0 +1,9 @@
+To do:
+- gen ssh key -> public key
+- app.cdp.asia, ssh file, tunnel "-L 1234:xxx.xxx.xxx.xxx:5432" -> start app.cdp.asia (environment) (development)
+  -> review project + sandbox-cdp.antsomi.com (API): @antsomi.com
+- pm2
+- schema: database:
+  + stories/campaigns/variants/destinations: Marketing Hub
+  + insight_properties / event_tracking / event_properties: Data Sources
+  + analytic_models / am_entities / am_fields: Analytic Models
