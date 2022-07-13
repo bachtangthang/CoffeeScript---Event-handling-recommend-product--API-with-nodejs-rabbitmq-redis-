@@ -18,7 +18,7 @@ router.post '/upsertMany', productController.upsertMany #ok
 # router.post '/', productController.createProduct
 
 router.get '/', productController.getAll #ok
-
+router.post '/upsertManyLoop', productController.upsertManyLoop
 #router.get '/:id', productController.getProductFromRedis
 #ok
 module.exports = router

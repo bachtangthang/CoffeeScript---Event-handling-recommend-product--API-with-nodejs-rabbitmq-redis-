@@ -40,40 +40,43 @@ events = (req, res) ->
     pipeline = redis.pipeline()
     productIdPipeline = redis.pipeline()
 
-    func1 = (callback) ->
+    getMostViewData = (callback) ->
       pipeline.zrevrange(keySameCategory, 0, limit - 1, "WITHSCORES").zrevrange(keyRecentlyView, 0, limit - 1, "WITHSCORES")
-      pipeline.exec (err, res) ->
-        callback null, res
-    
-    func2 = (rs, callback) ->
-      console.log "rs: ", rs
-      productIdSameCategory = rs[0][1].filter (_, i) -> i % 2 == 0
-      productViewSameCategory = rs[0][1].filter (_, i) -> i % 2 == 1
-      productIdRecentlyView = rs[1][1].filter (_, i) -> i % 2 == 0
-      productViewRecentlyView = rs[1][1].filter (_, i) -> i % 2 == 1
-      console.log productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView
+      pipeline.exec (err, data) ->
+        console.log "err: ", err
+        console.log "pipeline.exec results: ", data
+        productIdSameCategory = data[0][1].filter (_, i) -> i % 2 == 0
+        productViewSameCategory = data[0][1].filter (_, i) -> i % 2 == 1
+        productIdRecentlyView = data[1][1].filter (_, i) -> i % 2 == 0
+        productViewRecentlyView = data[1][1].filter (_, i) -> i % 2 == 1
+        console.log productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView
 
-      callback null, productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView
+        callback err, { productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView }
     
-    func3 = (productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView, callback) ->
+    getProductData = ({ productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView }, callback) ->
       try
         for productId in productIdSameCategory
+          console.log " productId: ", productId
           productIdPipeline.hgetall("portal:#{portal_id}:products:#{productId}")
         for productId in productIdRecentlyView
           productIdPipeline.hgetall("portal:#{portal_id}:products:#{productId}")
+        length = productIdSameCategory.length
+        productIdPipeline.exec (err, products) ->
+          console.log "product.length: ", products.length
+          console.log "productIdSameCategory.length: ", length
+          callback err, { products, length, productViewSameCategory, productViewRecentlyView }
 
-        productIdPipeline.exec (err, rs) ->
-          console.log "rs: ", rs[0][1]
-          callback(null, rs, productIdSameCategory.length, productViewSameCategory, productViewRecentlyView)
       catch err
-        console.log err
+        console.log "err in getProductData: ", err
+        callback err, null
 
-    func4 = (productInfoResult, length, productViewSameCategory, productViewRecentlyView, callback) ->
-      console.log productInfoResult
+    combineProductData = ({ products, length, productViewSameCategory, productViewRecentlyView }, callback) ->
+      console.log "length: ", length
+      console.log products.length
       productInfo = []
       i = 0
-      while i < productInfoResult.length
-        productInfo = productInfo.concat(productInfoResult[i][1])
+      while i < products.length
+        productInfo = productInfo.concat(products[i][1])
         i++
       console.log "productInfo:", productInfo
               
@@ -83,28 +86,56 @@ events = (req, res) ->
         ({ ...cur, view: productViewRecentlyView[index] })
       callback(null, { productSameCategory, productRecentlyView })
 
-    async.waterfall [func1, func2, func3, func4], (err, result) ->
-      console.log "productSameCategory: ", result.productSameCategory
-      console.log "productRecentlyView: ", result.productRecentlyView
-      fibrous.run () ->
-        template = readHtml.sync "./view/portal_#{portal_id}.html"
-        return template
-      , (err, rs) ->
-          console.log rs
-          htmlSameCategory = buildHtml(
-            rs,
-            result.productSameCategory,
-            "Top product of the same category")
+    # async.waterfall [getMostViewData, parseData, getProductData, combineProductData], (err, result) ->
+    #   console.log "productSameCategory: ", result.productSameCategory
+    #   console.log "productRecentlyView: ", result.productRecentlyView
+    #   fibrous.run () ->
+    #     template = readHtml.sync "./view/portal_#{portal_id}.html"
+    #     return template
+    #   , (err, rs) ->
+    #       console.log rs
+    #       htmlSameCategory = buildHtml(
+    #         rs,
+    #         result.productSameCategory,
+    #         "Top product of the same category")
 
-          htmlRecentlyView = buildHtml(
-            rs,
-            result.productRecentlyView,
-            "Recently view product")
+    #       htmlRecentlyView = buildHtml(
+    #         rs,
+    #         result.productRecentlyView,
+    #         "Recently view product")
         
-          console.log "html Same category:  #{htmlSameCategory}"
-          console.log "html recently view: #{htmlRecentlyView}"
+    #       console.log "html Same category:  #{htmlSameCategory}"
+    #       console.log "html recently view: #{htmlRecentlyView}"
 
-          res.json { htmlSameCategory, htmlRecentlyView }
+    #       res.json { htmlSameCategory, htmlRecentlyView }
+  
+    fibrous.run () ->
+      mostViewData = getMostViewData.sync()
+      productData = getProductData.sync mostViewData
+      data = combineProductData.sync productData
+      template = readHtml.sync "./view/portal_#{portal_id}.html"
+      return { data, template }
+    , (err, result) ->
+      if err?
+        console.log "err: ", err
+        res.json { err }
+      else
+        console.log result
+        htmlSameCategory = buildHtml(
+          result.template,
+          result.data.productSameCategory,
+          "Top product of the same category")
+
+        htmlRecentlyView = buildHtml(
+          result.template,
+          result.data.productRecentlyView,
+          "Recently view product")
+      
+        console.log "html Same category:  #{htmlSameCategory}"
+        console.log "html recently view: #{htmlRecentlyView}"
+
+        res.json { htmlSameCategory, htmlRecentlyView }
+
       
   catch err
     data =

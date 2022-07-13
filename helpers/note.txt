@@ -1,0 +1,60 @@
+chi dung waterfall khi co logic dac biet
+khong nen long fibrous trong nhau, neu long fibrou thi long trong 1 function khac (khai bao function khac co fibrous)
+
+xai parallel
+eachlimit voi limit se la so phan tu se dc chay song song voi nhau
+
+each se dungf de parallel ca funciton cho cac phan tu trong mang
+
+handle error, result don gian hon voi async, eachLimit
+
+
+				async.eachLimit products, 1, (product, doneEach) ->
+					fibrous.run () ->
+						productModel.sync.checkExist product.product_Id, (err, rs) ->
+					, doneEach
+
+					loopKeyToInsertProduct.sync
+				, (err, rs) ->
+					console.log err,
+					console.log rs
+
+[1, 2, 3, 4, 5]
+
+async.each arr, 100, (i, doneEach) ->
+	console.log 'begin', i
+	doAsync -> query postgres (100)
+	console.log 'done', i
+	doneEach()
+
+
+begin 1
+kjhkjdshfkjds
+done 1
+begin 2
+done 2
+begin 3
+done 3
+
+begin 1
+begin 2
+done 1
+done 2
+begin 3
+done 3
+
+begin 1
+begin 2
+begin 3
+sakdhfsakjdhfkjdsaf
+done 1
+done 2
+done 3
+
+tại sao lại ít khi xài async.each hay async.eachLimit (với limit là 1 con số lớn)
+-> vì khi sử dụng như vậy cách phần tử của mảng truyền vào sẽ đều dược chạy parallel
+-> Thoạt nhìn thì tốc độ sẽ tăng nhanh, tuy nhiên giả sử trong với mỗi phần từ trong mảng ta đều gọi 1 api bên thứ 3 (ví dụ như get dữ liệu redis hay là get dữ liệu ở db như postgresql)
+thì cùng 1 lúc, bên api thứ 3 đó phải handle rất nhiều request khiến cho performance bị giảm
+-> Vậy nên thông thường khi sử dụng async.eachLimit thì sẽ dùng với limit vừa phải để đảm bảo performance trên các api khác nhau và cũng đảm bảo việc truy xuất lỗi dễ dàng hơn
+
+trong fibrous, khi catch duoc loi se tra ve loi, ngat flow

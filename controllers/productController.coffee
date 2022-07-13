@@ -66,23 +66,23 @@ updateProductById = (req, res) ->
     res.status(500).json data
 
 deleteProductById = (req, res) ->
-	try
-		{ id } = req.params
-		console.log id
-		fibrous.run () ->
-			console.log "123"
-			product  = productModel.sync.delete id
-			console.log product
-			return product
-		, (err, rs) ->
-			if err? then res.status(500).json err
-			else
-				res.status(200).json rs
-	catch err
-		data =
-			success: false
-			message: err.message
-		res.status(500).json data
+  try
+    { id } = req.params
+    console.log id
+    fibrous.run () ->
+      console.log "123"
+      product  = productModel.sync.delete id
+      console.log product
+      return product
+    , (err, rs) ->
+      if err? then res.status(500).json err
+      else
+        res.status(200).json rs
+  catch err
+    data =
+      success: false
+      message: err.message
+    res.status(500).json data
 
 # getProductFromRedis = (req, res) ->
 #   try
@@ -110,6 +110,26 @@ upsertMany = (req, res) ->
     console.time "test"
     fibrous.run () ->
       upsertedProducts = productModel.sync.upsertMany(req.body)
+      return upsertedProducts
+    , (err, rs) ->
+      if err?
+        console.log err
+        res.status(500).json err
+      else
+        console.log "rs: ", rs
+        console.timeEnd "test"
+        res.status(200).json rs
+  catch err
+    data =
+      success: false
+      message: err.message
+    res.status(500).json data
+
+upsertManyLoop = (req, res) ->
+  try
+    console.time "test"
+    fibrous.run () ->
+      upsertedProducts = productModel.sync.upsertManyLoop(req.body)
       return upsertedProducts
     , (err, rs) ->
       if err?
@@ -156,4 +176,5 @@ module.exports =
     updateProductById: updateProductById
     deleteProductById: deleteProductById
     upsertMany: upsertMany
+    upsertManyLoop: upsertManyLoop
     # getProductFromRedis: getProductFromRedis
