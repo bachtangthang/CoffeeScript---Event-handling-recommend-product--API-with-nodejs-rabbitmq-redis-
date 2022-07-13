@@ -37,10 +37,10 @@ events = (req, res) ->
     keySameCategory = "portal:#{portal_id}:category:#{category}:mostview"
     keyRecentlyView = "portal:#{portal_id}:user:#{__uid}:mostview"
     #pipeline for retriving products
-    pipeline = redis.pipeline()
-    productIdPipeline = redis.pipeline()
+
 
     getMostViewData = (callback) ->
+      pipeline = redis.pipeline()
       pipeline.zrevrange(keySameCategory, 0, limit - 1, "WITHSCORES").zrevrange(keyRecentlyView, 0, limit - 1, "WITHSCORES")
       pipeline.exec (err, data) ->
         console.log "err: ", err
@@ -54,6 +54,7 @@ events = (req, res) ->
         callback err, { productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView }
     
     getProductData = ({ productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView }, callback) ->
+      productIdPipeline = redis.pipeline()
       try
         for productId in productIdSameCategory
           console.log " productId: ", productId
@@ -85,29 +86,6 @@ events = (req, res) ->
       productRecentlyView = productInfo.slice(length).map (cur, index) ->
         ({ ...cur, view: productViewRecentlyView[index] })
       callback(null, { productSameCategory, productRecentlyView })
-
-    # async.waterfall [getMostViewData, parseData, getProductData, combineProductData], (err, result) ->
-    #   console.log "productSameCategory: ", result.productSameCategory
-    #   console.log "productRecentlyView: ", result.productRecentlyView
-    #   fibrous.run () ->
-    #     template = readHtml.sync "./view/portal_#{portal_id}.html"
-    #     return template
-    #   , (err, rs) ->
-    #       console.log rs
-    #       htmlSameCategory = buildHtml(
-    #         rs,
-    #         result.productSameCategory,
-    #         "Top product of the same category")
-
-    #       htmlRecentlyView = buildHtml(
-    #         rs,
-    #         result.productRecentlyView,
-    #         "Recently view product")
-        
-    #       console.log "html Same category:  #{htmlSameCategory}"
-    #       console.log "html recently view: #{htmlRecentlyView}"
-
-    #       res.json { htmlSameCategory, htmlRecentlyView }
   
     fibrous.run () ->
       mostViewData = getMostViewData.sync()

@@ -92,23 +92,23 @@ class ProductModel extends CRUDModel
     console.log products
     try
       console.time
-      createInsertQuery = (product) =>
-        query1 = "INSERT INTO #{@table} (product_name, image_url, landing_page_url, category, price, status, created_at, updated_at, product_id, portal_id)
+      query1 = "INSERT INTO #{@table} (product_name, image_url, landing_page_url, category, price, status, created_at, updated_at, product_id, portal_id)
                 VALUES "
-        query2 = "ON CONFLICT (product_id)
-          DO
-          UPDATE SET product_name = COALESCE(EXCLUDED.product_name, products.product_name),
-          image_url = COALESCE(EXCLUDED.image_url, products.image_url),
-          landing_page_url = COALESCE(EXCLUDED.landing_page_url, products.landing_page_url),
-          category = COALESCE(EXCLUDED.category, products.category),
-          price = COALESCE(EXCLUDED.price, products.price),
-          status = COALESCE(EXCLUDED.status, products.status),
-          created_at = COALESCE(products.created_at, EXCLUDED.created_at, current_timestamp),
-          updated_at = COALESCE(current_timestamp, products.updated_at, current_timestamp),
-          portal_id = COALESCE(EXCLUDED.portal_id, products.portal_id)
+      query2 = "ON CONFLICT (product_id)
+        DO
+        UPDATE SET product_name = COALESCE(EXCLUDED.product_name, products.product_name),
+        image_url = COALESCE(EXCLUDED.image_url, products.image_url),
+        landing_page_url = COALESCE(EXCLUDED.landing_page_url, products.landing_page_url),
+        category = COALESCE(EXCLUDED.category, products.category),
+        price = COALESCE(EXCLUDED.price, products.price),
+        status = COALESCE(EXCLUDED.status, products.status),
+        created_at = COALESCE(products.created_at, EXCLUDED.created_at, current_timestamp),
+        updated_at = COALESCE(current_timestamp, products.updated_at, current_timestamp),
+        portal_id = COALESCE(EXCLUDED.portal_id, products.portal_id)
           RETURNING *"
-        columns = ["product_name", "image_url", "landing_page_url", "category", "price", "status", "created_at", "updated_at", "product_id", "portal_id"]
-              
+      columns = ["product_name", "image_url", "landing_page_url", "category", "price", "status", "created_at", "updated_at", "product_id", "portal_id"]
+          
+      createInsertQuery = (product, query1, query2) ->
         count = 0
         args = []
         parameter = []
@@ -123,22 +123,25 @@ class ProductModel extends CRUDModel
         console.log "query: ", query
         return { query, args }
       
+      productArr = []
+
       async.eachLimit products, 2, (product, doneEach) =>
-        { query, args } = createInsertQuery product
+        { query, args } = createInsertQuery product, query1, query2
         fibrous.run () =>
           result = @client.sync.query query, args
           console.log result.rows
           return result.rows
         , (err, rs) ->
-          console.log err
-          console.log rs
-          callback null, rs
+          console.log "err in each Limit: ", err
+          console.log "rs in each limit: ", rs
+          if rs? then productArr.push rs[0]
+          doneEach(null)
       , (err, result) ->
         if err?
           console.log err
-          callback err, null
         else
           console.log "data.rows: ", result
+          callback null, productArr
       console.timeEnd
     catch err
       console.log err

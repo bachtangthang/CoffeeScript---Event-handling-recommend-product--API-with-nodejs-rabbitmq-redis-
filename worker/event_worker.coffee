@@ -22,9 +22,10 @@ amqp.connect RABBIT_URL, (error0, connection) ->
 				{ __uid, event, portal_id, products } = payload
 				# pipeline = redis.pipeline()
 
-				
+
 				saveProduct = (exists, product, callback) ->
 					pipeline = redis.pipeline()
+
 					fibrous.run () ->
 						if exists?
 							console.log "exists: ", exists
@@ -44,11 +45,15 @@ amqp.connect RABBIT_URL, (error0, connection) ->
 					, (err, insertedProduct) ->
 						console.log err
 						console.log "insertedProduct: ", insertedProduct
-						# saveEvent insertedProduct, pipeline
+						pipeline.exec (err, result) ->
+								console.log err
+								console.log result
 						callback err, insertedProduct
 
 
 				saveEvent = (insertedProduct, callback) ->
+					pipeline = redis.pipeline()
+
 					fibrous.run () ->
 						console.log "insertedProduct inside saveEvent: ", insertedProduct
 						if insertedProduct != null
@@ -61,20 +66,21 @@ amqp.connect RABBIT_URL, (error0, connection) ->
 							insertedEvent = eventHistoryModel.sync.create __uid, event, insertedProduct.product_id, portal_id
 							return insertedEvent
 						else return false
-
 					, (err, insertedEvent) ->
 						console.log err,
 						console.log insertedEvent
+						pipeline.exec (err, result) ->
+							console.log err
+							console.log result
 						callback err, insertedEvent
 				
-				doneEach = (err, rs) ->
-					if err?
-						console.log "err in done: ", err
-					else
-						console.log "done: ", rs
+				# doneEach = (err, rs) ->
+				# 	if err?
+				# 		console.log "err in done: ", err
+				# 	else
+				# 		console.log "done: ", rs
 
 				async.eachLimit products, 2, (product, doneEach) ->
-					pipeline = redis.pipeline()
 					console.log product.product_Id
 					fibrous.run () ->
 						exists = productModel.sync.checkExist product.product_Id
@@ -85,8 +91,7 @@ amqp.connect RABBIT_URL, (error0, connection) ->
 					, (err, rs) ->
 						console.log "err in eachLimit: ", err
 						console.log "rs in eachLimit: ", rs
-						pipeline.exec (error, result) ->
-							console.log "pipeline.exec result: ", result
+						doneEach(null)
 				,	(err, result) ->
 					console.log err
 					console.log result

@@ -58,3 +58,6 @@ thì cùng 1 lúc, bên api thứ 3 đó phải handle rất nhiều request khi
 -> Vậy nên thông thường khi sử dụng async.eachLimit thì sẽ dùng với limit vừa phải để đảm bảo performance trên các api khác nhau và cũng đảm bảo việc truy xuất lỗi dễ dàng hơn
 
 trong fibrous, khi catch duoc loi se tra ve loi, ngat flow
+
+doneEach de tra ve 1 callback, tuc la sau khi function dc chay se goi doneEach ket thuc ham, sau do trong doneEach se goi callback de thuc hien
+viec tiep theo, neu chi console loi hay error thi se khien cho bi dung lai
