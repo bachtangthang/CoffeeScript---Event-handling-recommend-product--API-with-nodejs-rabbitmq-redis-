@@ -19,15 +19,11 @@ while i < 100
 	mainArr.push obj
 	i++
 
-console.log "mainArr: ", mainArr
-
 fibrous.run () ->
-	response = fetch "http://localhost:5000/products/upsertMany", {
+	response = fetch "http://localhost:5000/products/upsertManyLoop", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(mainArr)
 	}
 	return response
 , (err, response) ->
-	if err? then console.log err
-	else console.log response
