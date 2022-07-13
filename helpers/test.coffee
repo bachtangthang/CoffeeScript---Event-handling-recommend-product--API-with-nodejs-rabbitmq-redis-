@@ -1,69 +1,33 @@
-# async = require "async"
-# async.parallel [
-#   (callback) ->
-#     setTimeout ->
-#       console.log 'Task One'
-#       callback null, 1
-#       return
-#     , 200
-#     return
-#   (callback) ->
-#     setTimeout ->
-#       console.log 'Task Two'
-#       callback null, 2
-#       return
-#     , 100
-#     return
-# ]
-
-
-Redis                       = require("ioredis")
-redis                       = new Redis 6379
 fibrous = require "fibrous"
-async = require "async"
+fetch = require "node-fetch"
 
-pipeline = redis.pipeline()
-productIdPipeline = redis.pipeline()
+obj =
+	{
+		product_name: "thịt chó 1",
+		image_url: "url",
+		landing_page_url: "landing_page_url",
+		category: "thit cho",
+		price: 10000,
+		status: 1,
+		product_id: "1000",
+		portal_id: 1
+	}
 
-portal_id = 1
-# __uid = "68f5b35e-b5d8-4bae-b1ad-039cb6e3b1f3"
-# category = "phu_kien_dien_thoai"
-# limit = 3
+mainArr = []
+i = 0
+while i < 100
+	mainArr.push obj
+	i++
 
-# keySameCategory = "portal:#{portal_id}:category:#{category}:mostview"
-# keyRecentlyView = "portal:#{portal_id}:user:#{__uid}:mostview"
+console.log "mainArr: ", mainArr
 
-{ readHtml, buildHtml }     = require("../helpers/doT.coffee")
-
-# func1 = (callback) ->
-#   pipeline.zrevrange(keySameCategory, 0, limit - 1, "WITHSCORES").zrevrange(keyRecentlyView, 0, limit - 1, "WITHSCORES")
-#   pipeline.exec (err, res) ->
-#     console.log res
-#     callback null, res
-
-# func2 = (rs, callback) ->
-#   console.log "rs: ", rs
-#   productIdSameCategory = rs[0][1].filter (_, i) -> i % 2 == 0
-#   productViewSameCategory = rs[0][1].filter (_, i) -> i % 2 == 1
-#   productIdRecentlyView = rs[1][1].filter (_, i) -> i % 2 == 0
-#   productViewRecentlyView = rs[1][1].filter (_, i) -> i % 2 == 1
-#   console.log productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView
-
-#   callback null, productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView
-
-# func3 = (productIdSameCategory, productViewSameCategory, productIdRecentlyView, productViewRecentlyView, callback) ->
-#   console.log "productIdSameCategory: ", productIdSameCategory
-#   for productId in productIdSameCategory
-#     console.log "portal:#{portal_id}:products:#{productId}"
-#     productIdPipeline.hgetall("portal:#{portal_id}:products:#{productId}")
-#   for productId in productIdRecentlyView
-#     productIdPipeline.hgetall("portal:#{portal_id}:products:#{productId}")
-
-#   productIdPipeline.exec (err, rs) ->
-#     console.log "rs: ", rs[1][1]
-#     callback(null, rs)
-
-# async.waterfall [func1, func2, func3], (err, results) -> console.log results
-
-readHtml "../view/portal_#{portal_id}.html", (err, rs) -> console.log "rs: ", rs
-# console.log "template: ", template
+fibrous.run () ->
+	response = fetch "http://localhost:5000/products/upsertMany", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(mainArr)
+	}
+	return response
+, (err, response) ->
+	if err? then console.log err
+	else console.log response
